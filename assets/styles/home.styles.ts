@@ -1,13 +1,15 @@
-import { ColorScheme } from "@/hooks/useTheme";
+import useTheme, { ColorScheme } from "@/hooks/useTheme";
 import { StyleSheet } from "react-native";
 
 export const createHomeStyles = (colors: ColorScheme) => {
+    const { isDarkMode } = useTheme();
     const styles = StyleSheet.create({
         container: {
             flex: 1,
             backgroundColor: colors.bg,
             paddingHorizontal: 20,
             paddingTop: 40,
+            
         },
 
         // Header
@@ -16,6 +18,11 @@ export const createHomeStyles = (colors: ColorScheme) => {
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 20,
+            paddingHorizontal:10,
+            paddingVertical:10,
+            borderWidth: 1,
+            borderRadius: 12,
+            borderColor: isDarkMode? colors.textMuted: "black"
         },
         profileSection: {
             flexDirection: "row",
@@ -40,8 +47,9 @@ export const createHomeStyles = (colors: ColorScheme) => {
         notificationButton: {
             width: 40,
             height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.surface,
+            borderRadius: 25,
+            borderWidth: 1.5,
+            borderColor: isDarkMode ? colors.textMuted : "black",
             justifyContent: "center",
             alignItems: "center",
         },

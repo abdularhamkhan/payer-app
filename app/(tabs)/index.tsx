@@ -1,5 +1,8 @@
 
 import { createHomeStyles } from '@/assets/styles/home.styles'
+import BalanceCard from '@/components/tabs/home/BalanceCard'
+import Header from '@/components/tabs/home/Header'
+import TransactionHistory from '@/components/tabs/home/TransactionHistory'
 import useTheme from '@/hooks/useTheme'
 import { LinearGradient } from "expo-linear-gradient"
 import React from 'react'
@@ -13,12 +16,14 @@ const Home = () => {
     return (
         <LinearGradient colors={colors.gradients.background} style={homeStyles.container}>
             <SafeAreaView>
-                <Text>Home</Text>
+                <Header/>
+                <BalanceCard/>
                 <TouchableOpacity onPress={toggleDarkMode}>
-                    <Text>
-                        Hey
-                    </Text>
-                </TouchableOpacity>
+                <Text>
+                    Change
+                </Text>
+            </TouchableOpacity>
+                <TransactionHistory/>
             </SafeAreaView>
         </LinearGradient>
     )
