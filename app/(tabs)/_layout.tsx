@@ -1,12 +1,26 @@
+import useTheme from "@/hooks/useTheme"
 import { Ionicons } from "@expo/vector-icons"
 import { Tabs } from 'expo-router'
 import React from 'react'
 
 const TabsLayout = () => {
+    const {colors} = useTheme();
     return (
         <Tabs screenOptions={{
-            tabBarStyle:{},
-            tabBarLabelStyle:{},
+            tabBarStyle:{
+                backgroundColor: colors.surface,
+                borderTopWidth:1,
+                borderTopColor: colors.border,
+                height:90,
+                paddingBottom: 30,
+                paddingTop:10
+            },
+            tabBarLabelStyle:{
+                fontSize: 12,
+                fontWeight: 600,
+                textAlign: "center",
+                alignContent: "center"
+            },
             tabBarInactiveTintColor:"",
             headerShown:false
 
@@ -14,30 +28,30 @@ const TabsLayout = () => {
 
             <Tabs.Screen name='index' options={{
                 title: 'Home',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='home-outline' size={size} color={focused ? "" : color} />,
-                tabBarActiveTintColor: "skyblue"
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='home-outline' size={size} color={focused ? colors.primary : color} />,
+                tabBarActiveTintColor: colors.primary
             }} />
             <Tabs.Screen name='cardsWallet' options={{
                 title: 'Wallet',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='wallet-outline' size={size} color={focused ? "" : color} />,
-                tabBarActiveTintColor: "skyblue"
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='wallet-outline' size={size} color={focused ? colors.primary : color} />,
+                tabBarActiveTintColor: colors.primary
             }} />
             <Tabs.Screen name='scanQrCode' options={{
                 title: 'Scan',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='qr-code-outline' size={size} color={focused ? "" : color} />,
-                tabBarActiveTintColor: "skyblue"
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='qr-code-outline' size={size} color={focused ? colors.primary : color} />,
+                tabBarActiveTintColor: colors.primary
 
             }} />
             <Tabs.Screen name='stocksAnalytics' options={{
                 title: 'Stocks',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='analytics-outline' size={size} color={focused ? "" : color} />,
-                tabBarActiveTintColor: "skyblue"
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='analytics-outline' size={size} color={focused ? colors.primary : color} />,
+                tabBarActiveTintColor: colors.primary
 
             }} />
             <Tabs.Screen name='userProfile' options={{
                 title: 'You',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='person-circle-outline' size={size} color={focused ? "" : color} />,
-                tabBarActiveTintColor: "skyblue"
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='person-circle-outline' size={size} color={focused ? colors.primary : color} />,
+                tabBarActiveTintColor: colors.primary
 
             }} />
 
