@@ -1,8 +1,7 @@
-import useTheme, { ColorScheme } from "@/hooks/useTheme";
+import { ColorScheme } from "@/hooks/useTheme";
 import { StyleSheet } from "react-native";
 
 export const createHomeStyles = (colors: ColorScheme) => {
-    const { isDarkMode } = useTheme();
     const styles = StyleSheet.create({
         container: {
             flex: 1,
@@ -22,7 +21,7 @@ export const createHomeStyles = (colors: ColorScheme) => {
             paddingVertical: 10,
             borderWidth: 1,
             borderRadius: 12,
-            borderColor: isDarkMode ? colors.textMuted : "black",
+            borderColor: colors.text,
             backgroundColor: colors.gradients.background[0]
         },
         profileSection: {
@@ -37,7 +36,7 @@ export const createHomeStyles = (colors: ColorScheme) => {
             backgroundColor: colors.surface,
         },
         headerText: {
-            color: colors.textMuted,
+            color: colors.text,
             fontSize: 16,
         },
         headerName: {
@@ -50,7 +49,7 @@ export const createHomeStyles = (colors: ColorScheme) => {
             height: 40,
             borderRadius: 25,
             borderWidth: 1.5,
-            borderColor: isDarkMode ? colors.textMuted : "black",
+            borderColor: colors.text,
             justifyContent: "center",
             alignItems: "center",
         },
@@ -169,14 +168,14 @@ export const createHomeStyles = (colors: ColorScheme) => {
         },
         transactionDetails: {
             justifyContent: "space-between",
-            flexDirection:"row",
-            borderWidth:1,
-            borderColor:colors.text,
+            flexDirection: "row",
+            borderWidth: 1,
+            borderColor: colors.text,
             borderRadius: 20,
-            padding:10,
-            margin:10,
-            marginHorizontal:5,
-            paddingHorizontal:5,
+            padding: 10,
+            margin: 10,
+            marginHorizontal: 5,
+            paddingHorizontal: 5,
             color: colors.text
 
         },
@@ -193,12 +192,30 @@ export const createHomeStyles = (colors: ColorScheme) => {
         transactionAmount: {
             fontSize: 16,
             fontWeight: "700",
-            color: colors.text
+            color: colors.text,
+
+        },
+        transactionAmountContainer: {
+            justifyContent: "center"
+        },
+        transactionTypeContainer:{
+            justifyContent: "center"
+        },
+        transactionImage:{
+            justifyContent:"center"
+        },
+        transactionDetailsImageAndType:{
+            flexDirection:"row",
+            gap: 10
         },
         transactionPositive: {
+            fontSize: 16,
+            fontWeight: "700",
             color: colors.success,
         },
         transactionNegative: {
+            fontSize: 16,
+            fontWeight: "700",
             color: colors.danger,
         },
     });

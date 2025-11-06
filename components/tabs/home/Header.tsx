@@ -87,7 +87,7 @@ const Header = () => {
             > Hi, {displayName}
             </Text>
             <View style={homeStyles.notificationButton}>
-                <Ionicons name='notifications-outline' size={24} color={isDarkMode ? colors.textMuted : "black"} />
+                <Ionicons name='notifications-outline' size={24} color={isDarkMode ? colors.text : "black"} />
             </View>
 
         </View>

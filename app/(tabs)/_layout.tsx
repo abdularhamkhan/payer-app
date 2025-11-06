@@ -42,9 +42,9 @@ const TabsLayout = () => {
                 tabBarActiveTintColor: colors.primary
 
             }} />
-            <Tabs.Screen name='stocksAnalytics' options={{
-                title: 'Stocks',
-                tabBarIcon: ({ color, size, focused }) => <Ionicons name='analytics-outline' size={size} color={focused ? colors.primary : color} />,
+            <Tabs.Screen name='statsAnalytics' options={{
+                title: 'Stats',
+                tabBarIcon: ({ color, size, focused }) => <Ionicons name='trending-up-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
 
             }} />

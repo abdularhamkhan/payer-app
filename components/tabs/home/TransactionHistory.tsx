@@ -8,7 +8,7 @@ const TransactionHistory = () => {
   const { colors } = useTheme();
   const homeStyles = createHomeStyles(colors);
   const viewAllTransactionHistory = () => {
-
+    
   }
   return (
     <View style={homeStyles.transactionsSection}>

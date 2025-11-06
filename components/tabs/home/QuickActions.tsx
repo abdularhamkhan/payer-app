@@ -22,7 +22,7 @@ const QuickActions = () => {
                 <Text style={homeStyles.actionLabel}>Request</Text>
             </View>
             <View style={homeStyles.actionButton}>
-                <Ionicons name='apps-outline' size={20} color={colors.textMuted} style={homeStyles.actionIconContainer}/>
+                <Ionicons name='paw-outline' size={20} color={colors.textMuted} style={homeStyles.actionIconContainer}/>
                 <Text style={homeStyles.actionLabel}>More</Text>
             </View>
         </View>
