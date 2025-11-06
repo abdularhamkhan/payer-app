@@ -9,7 +9,7 @@ export const createHomeStyles = (colors: ColorScheme) => {
             backgroundColor: colors.bg,
             paddingHorizontal: 20,
             paddingTop: 40,
-            
+
         },
 
         // Header
@@ -18,11 +18,12 @@ export const createHomeStyles = (colors: ColorScheme) => {
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 20,
-            paddingHorizontal:10,
-            paddingVertical:10,
+            paddingHorizontal: 10,
+            paddingVertical: 10,
             borderWidth: 1,
             borderRadius: 12,
-            borderColor: isDarkMode? colors.textMuted: "black"
+            borderColor: isDarkMode ? colors.textMuted : "black",
+            backgroundColor: colors.gradients.background[0]
         },
         profileSection: {
             flexDirection: "row",
@@ -65,10 +66,14 @@ export const createHomeStyles = (colors: ColorScheme) => {
             shadowOffset: { width: 0, height: 6 },
             shadowRadius: 10,
         },
+        balanceText: {
+            flexDirection: "row",
+            gap: 20,
+            textAlign: "center"
+        },
         balanceLabel: {
-            color: colors.textMuted,
+            color: colors.text,
             fontSize: 16,
-            marginBottom: 8,
             fontWeight: "500",
         },
         balanceValue: {
@@ -77,37 +82,54 @@ export const createHomeStyles = (colors: ColorScheme) => {
             fontWeight: "800",
             letterSpacing: 1,
         },
+        hideArea: {
+            width: 40,
+            height: 40
+        },
 
         // Quick Actions
         actionsRow: {
             flexDirection: "row",
             justifyContent: "space-between",
             marginBottom: 28,
+            paddingHorizontal: 20
         },
         actionButton: {
             alignItems: "center",
             justifyContent: "center",
             width: 70,
         },
+        actionText: {
+            color: colors.text,
+            fontSize: 12
+        },
         actionIconContainer: {
-            width: 56,
-            height: 56,
-            borderRadius: 16,
+            width: 40,
+            height: 40,
+            borderRadius: 25,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: colors.surface,
-            marginBottom: 8,
+            padding: 10,
+            backgroundColor: colors.surface
         },
         actionLabel: {
             color: colors.textMuted,
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: "600",
             textAlign: "center",
+            marginTop: 10
         },
 
         // Recent Transactions
         transactionsSection: {
             marginTop: 10,
+        },
+        transactionsSectionView: {
+            flexDirection: "row",
+            alignItems: "center",
+            alignContent: "center",
+            justifyContent: "space-between"
+
         },
         sectionHeader: {
             flexDirection: "row",
@@ -122,7 +144,7 @@ export const createHomeStyles = (colors: ColorScheme) => {
         },
         seeAll: {
             color: colors.primary,
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: "600",
         },
 
@@ -146,7 +168,17 @@ export const createHomeStyles = (colors: ColorScheme) => {
             alignItems: "center",
         },
         transactionDetails: {
-            justifyContent: "center",
+            justifyContent: "space-between",
+            flexDirection:"row",
+            borderWidth:1,
+            borderColor:colors.text,
+            borderRadius: 20,
+            padding:10,
+            margin:10,
+            marginHorizontal:5,
+            paddingHorizontal:5,
+            color: colors.text
+
         },
         transactionTitle: {
             color: colors.text,
@@ -155,12 +187,13 @@ export const createHomeStyles = (colors: ColorScheme) => {
         },
         transactionDate: {
             color: colors.textMuted,
-            fontSize: 13,
+            fontSize: 12,
             marginTop: 2,
         },
         transactionAmount: {
             fontSize: 16,
             fontWeight: "700",
+            color: colors.text
         },
         transactionPositive: {
             color: colors.success,
