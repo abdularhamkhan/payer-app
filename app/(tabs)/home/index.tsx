@@ -1,28 +1,68 @@
-
-import { createHomeStyles } from '@/assets/styles/home.styles'
-import BalanceCard from '@/components/tabs/home/BalanceCard'
-import Header from '@/components/tabs/home/Header'
-import QuickActions from '@/components/tabs/home/QuickActions'
-import TransactionHistory from '@/components/tabs/home/TransactionHistory'
-import useTheme from '@/hooks/useTheme'
-import { LinearGradient } from "expo-linear-gradient"
+import Screen from '@/components/ui/Screen'
 import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Text } from 'react-native'
 
-
-const Home = () => {
-    const { colors } = useTheme();
-    const homeStyles = createHomeStyles(colors);
-    return (
-        <LinearGradient colors={colors.gradients.background} style={homeStyles.container}>
-            <SafeAreaView>
-                <Header />
-                <BalanceCard />
-                <QuickActions />
-                <TransactionHistory />
-            </SafeAreaView>
-        </LinearGradient>
-    )
+const HomeScreen = () => {
+  return (
+    <Screen gradient scrollable>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+      <Text>HomeScreen</Text>
+    </Screen>
+  )
 }
 
-export default Home
+export default HomeScreen

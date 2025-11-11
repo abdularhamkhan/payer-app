@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { StatusBar } from "react-native";
 
 export interface ColorScheme {
     bg: string;
@@ -97,29 +98,29 @@ export const lightColorScheme: ColorScheme = {
 
 
 interface ThemeContextType {
-    isDarkMode: Boolean;
+    isDarkMode: boolean;
     toggleDarkMode: () => void;
     colors: ColorScheme;
 }
 
-const ThemeContext = createContext<undefined | ThemeContextType>(undefined);
+const ThemeContext = createContext<null | ThemeContextType>(null);
 
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-    const [isDarkMode, setIsDArkMode] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
         // this will get the user's choice 
-        AsyncStorage.getItem("darkMode").then((value) => {
-            if (value)
-                setIsDArkMode(JSON.parse(value))
-        })
-
-    })
+        const loadTheme = async () => {
+            const value = await AsyncStorage.getItem("darkMode");
+            if (value) setIsDarkMode(JSON.parse(value));
+        };
+        loadTheme();
+    }, [])
 
     const toggleDarkMode = async () => {
         const newMode = !isDarkMode;
-        setIsDArkMode(newMode);
+        setIsDarkMode(newMode);
         await AsyncStorage.setItem("darkMode", JSON.stringify(newMode));
     }
 
@@ -127,6 +128,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, colors }}>
+            <StatusBar
+                barStyle={colors.statusBarStyle}
+                backgroundColor={colors.bg}
+                animated
+            />
             {children}
         </ThemeContext.Provider>
     )

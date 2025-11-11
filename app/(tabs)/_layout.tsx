@@ -26,29 +26,29 @@ const TabsLayout = () => {
 
         }}>
 
-            <Tabs.Screen name='index' options={{
+            <Tabs.Screen name='home/index' options={{
                 title: 'Home',
                 tabBarIcon: ({ color, size, focused }) => <Ionicons name='home-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
             }} />
-            <Tabs.Screen name='cardsWallet' options={{
+            <Tabs.Screen name='cardsWallet/index' options={{
                 title: 'Wallet',
                 tabBarIcon: ({ color, size, focused }) => <Ionicons name='wallet-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
             }} />
-            <Tabs.Screen name='scanQrCode' options={{
+            <Tabs.Screen name='scanQrCode/index' options={{
                 title: 'Scan',
                 tabBarIcon: ({ color, size, focused }) => <Ionicons name='qr-code-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
 
             }} />
-            <Tabs.Screen name='statsAnalytics' options={{
+            <Tabs.Screen name='statsAnalytics/index' options={{
                 title: 'Stats',
                 tabBarIcon: ({ color, size, focused }) => <Ionicons name='trending-up-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
 
             }} />
-            <Tabs.Screen name='userProfile' options={{
+            <Tabs.Screen name='userProfile/index' options={{
                 title: 'You',
                 tabBarIcon: ({ color, size, focused }) => <Ionicons name='person-circle-outline' size={size} color={focused ? colors.primary : color} />,
                 tabBarActiveTintColor: colors.primary
