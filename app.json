@@ -23,6 +23,11 @@
       "output": "static",
       "favicon": "./assets/images/payer.png"
     },
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#7F5AF0"
+    },
     "plugins": [
       "expo-router",
       [
@@ -31,8 +36,9 @@
           "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F9FAFB",
+          "backgroundColor": "#7F5AF0",
           "dark": {
+            "image": "./assets/images/splash.png",
             "backgroundColor": "#0E1013"
           }
         }

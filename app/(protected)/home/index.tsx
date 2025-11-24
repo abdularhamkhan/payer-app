@@ -1,102 +1,165 @@
 // app/(protected)/home/index.tsx
+import { api } from "@/convex/_generated/api";
+import InfoCard from "@/components/ui/InfoCard";
 import Screen from "@/components/ui/Screen";
 import useTheme from "@/hooks/useTheme";
+import { useUser } from "@clerk/clerk-expo";
+import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQuery } from "convex/react";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-/**
- * Home screen: balance card, quick actions, recent transactions.
- * Visuals inspired by your hand-sketched screens.
- *
- * Wire the placeholders to Convex queries/mutations as needed.
- */
-
-type TX = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  amount: number;
-  type: "DEBIT" | "CREDIT";
-};
+import React, { useEffect } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { user } = useUser();
 
-  // TODO: replace this with a Convex query to fetch user wallet & transactions
-  const balance = 12500.5;
-  const currency = "PKR";
+  // Convex queries
+  const wallet = useQuery(api.wallets.get.get);
+  const transactions = useQuery(api.transactions.list.list, { limit: 10, cursor: undefined });
+  const createWallet = useMutation(api.wallets.create.create);
 
-  const sampleTx: TX[] = useMemo(
-    () => [
-      { id: "1", title: "Food", subtitle: "12:34 Nov 12", amount: -12.5, type: "DEBIT" },
-      { id: "2", title: "Salary", subtitle: "22:34 Nov 12", amount: +480, type: "CREDIT" },
-    ],
-    []
-  );
+  // Create wallet if doesn't exist
+  useEffect(() => {
+    if (wallet === null) {
+      createWallet();
+    }
+  }, [wallet]);
 
-  const QuickAction = ({ label, onPress }: { label: string; onPress?: () => void }) => (
-    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface }]} onPress={onPress}>
-      <View style={styles.actionDot} />
+  const QuickAction = ({ label, icon, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress?: () => void }) => (
+    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onPress}>
+      <LinearGradient
+        colors={colors.gradients.primary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.actionIcon}
+      >
+        <Ionicons name={icon} size={24} color="#FFFFFF" />
+      </LinearGradient>
       <Text style={[styles.actionLabel, { color: colors.text }]}>{label}</Text>
     </TouchableOpacity>
   );
 
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  if (wallet === undefined || transactions === undefined) {
+    return (
+      <Screen>
+        <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading your wallet...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen gradient>
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.hi, { color: colors.text }]}>Hi,</Text>
-          {/* Add avatar / profile icon on right later */}
+          <View>
+            <Text style={[styles.greeting, { color: colors.textMuted }]}>Hi,</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{user?.firstName || "Guest"}</Text>
+          </View>
+          <TouchableOpacity onPress={() => router.push("/(protected)/profile")}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Text style={styles.avatarText}>{user?.firstName?.charAt(0) || "G"}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Balance card */}
-        <View style={[styles.balanceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Your Balance</Text>
-          <Text style={[styles.balanceAmount, { color: colors.text }]}>
-            {currency} {balance.toLocaleString()}
-          </Text>
-        </View>
+        {/* Balance Card with Gradient */}
+        <TouchableOpacity activeOpacity={0.9}>
+          <LinearGradient
+            colors={colors.gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.balanceCard}
+          >
+            <Text style={styles.balanceLabel}>Your Balance</Text>
+            <Text style={styles.balanceAmount}>
+              Rs. {wallet?.balance?.toLocaleString() || "0"}
+            </Text>
+            <Text style={styles.balanceIban}>{wallet?.iban || "No IBAN"}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-        {/* Quick actions row */}
+        {/* Quick Actions */}
         <View style={styles.quickRow}>
-          <QuickAction label="Topup" onPress={() => router.push("/(protected)/wallets")} />
-          <QuickAction label="Transfer" onPress={() => router.push("/(protected)/home?flow=transfer")} />
-          <QuickAction label="Request" onPress={() => router.push("/(protected)/home?flow=request")} />
-          <QuickAction label="More" onPress={() => router.push("/(protected)/profile")} />
+          <QuickAction label="Topup" icon="arrow-down-outline" onPress={() => router.push("/(protected)/wallets")} />
+          <QuickAction label="Transfer" icon="swap-horizontal-outline" onPress={() => router.push("/(protected)/transactions/new")} />
+          <QuickAction label="Request" icon="arrow-up-outline" onPress={() => router.push("/(protected)/transactions/new")} />
+          <QuickAction label="More" icon="ellipsis-horizontal-outline" onPress={() => router.push("/(protected)/profile")} />
         </View>
 
-        {/* Transactions header */}
+        {/* Transactions Header */}
         <View style={styles.txHeader}>
           <Text style={[styles.txTitle, { color: colors.text }]}>Transaction History</Text>
-          <TouchableOpacity onPress={() => router.push("/(protected)/transactions")}>
+          <TouchableOpacity onPress={() => router.push("/(protected)/stats")}>
             <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Transaction list */}
+        {/* Transaction List */}
         <FlatList
-          data={sampleTx}
-          keyExtractor={(t) => t.id}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          data={transactions?.items || []}
+          keyExtractor={(t) => t._id}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={[styles.txRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-              <View style={styles.txLeft}>
-                <View style={[styles.txAvatar, { backgroundColor: colors.gradients.muted[0] }]} />
-                <View>
-                  <Text style={[styles.txTitleText, { color: colors.text }]}>{item.title}</Text>
-                  <Text style={[styles.txSubtitle, { color: colors.textMuted }]}>{item.subtitle}</Text>
+            <InfoCard
+              onPress={() => router.push(`/(protected)/transactions/detail?id=${item._id}`)}
+              style={styles.txRow}
+            >
+              <View style={styles.txContent}>
+                <View style={styles.txLeft}>
+                  <View style={[
+                    styles.txIcon,
+                    { backgroundColor: item.type === "CREDIT" ? colors.success + "20" : colors.danger + "20" }
+                  ]}>
+                    <Ionicons
+                      name={item.type === "CREDIT" ? "arrow-down" : "arrow-up"}
+                      size={20}
+                      color={item.type === "CREDIT" ? colors.success : colors.danger}
+                    />
+                  </View>
+                  <View>
+                    <Text style={[styles.txTitleText, { color: colors.text }]}>
+                      {item.description || (item.type === "CREDIT" ? "Received" : "Sent")}
+                    </Text>
+                    <Text style={[styles.txSubtitle, { color: colors.textMuted }]}>
+                      {formatDate(item.createdAt)}
+                    </Text>
+                  </View>
                 </View>
+                <Text style={[
+                  styles.txAmount,
+                  { color: item.type === "CREDIT" ? colors.success : colors.danger }
+                ]}>
+                  {item.type === "CREDIT" ? "+" : "-"}Rs. {Math.abs(item.amount).toLocaleString()}
+                </Text>
               </View>
-              <Text style={[styles.txAmount, { color: item.amount > 0 ? colors.success : colors.danger }]}>
-                {item.amount > 0 ? `+${item.amount}` : `${item.amount}`}
-              </Text>
-            </View>
+            </InfoCard>
           )}
           ListEmptyComponent={
-            <View style={{ padding: 20 }}>
-              <Text style={{ color: colors.textMuted }}>No transactions yet</Text>
+            <View style={styles.emptyState}>
+              <Ionicons name="receipt-outline" size={64} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>No transactions yet</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
+                Start by topping up your wallet
+              </Text>
             </View>
           }
         />
