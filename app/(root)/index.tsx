@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 
 export default function Splash() {
 	const router = useRouter();
@@ -41,11 +41,12 @@ export default function Splash() {
 			end={{ x: 1, y: 1 }}
 			style={styles.container}
 		>
-			<View style={[styles.logoCircle, { borderColor: colors.card }]}>
-				<Text style={[styles.logoText, { color: colors.card }]}>Payer</Text>
-			</View>
-			<ActivityIndicator size="large" color={colors.card} style={styles.loader} />
-			<Text style={[styles.tagline, { color: colors.card }]}>Your Digital Wallet</Text>
+			<Image 
+				source={require('@/assets/images/payer.png')} 
+				style={styles.logo}
+				resizeMode="contain"
+			/>
+			<ActivityIndicator size="large" color="#ffffff" style={styles.loader} />
 		</LinearGradient>
 	);
 }
@@ -56,26 +57,12 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	logoCircle: {
-		width: 140,
-		height: 140,
-		borderRadius: 70,
-		borderWidth: 5,
-		alignItems: "center",
-		justifyContent: "center",
+	logo: {
+		width: 200,
+		height: 200,
 		marginBottom: 24,
 	},
-	logoText: {
-		fontSize: 32,
-		fontWeight: "800",
-	},
 	loader: {
-		marginTop: 16,
-	},
-	tagline: {
-		fontSize: 16,
-		fontWeight: "600",
-		marginTop: 16,
-		opacity: 0.9,
+		marginTop: 24,
 	},
 });

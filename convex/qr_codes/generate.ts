@@ -1,43 +1,27 @@
+'use node';
 import { v } from "convex/values";
-import { mutation } from "../_generated/server";
-import { getConvexUser } from "../utils/getUser";
-import { audit } from "../audit_logs/log";
+import { action } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { randomBytes } from "crypto";
 
-export const generate = mutation({
+export const generate = action({
   args: {
     amount: v.optional(v.number()),
     ttlSeconds: v.optional(v.number()), // lifetime in seconds
   },
-  handler: async (ctx, { amount, ttlSeconds = 300 }) => {
-    const user = await getConvexUser(ctx);
-    const uid = user._id;
-
-    // ensure wallet exists
-    const wallet = await ctx.db
-      .query("wallets")
-      .withIndex("by_user", (q) => q.eq("userId", uid))
-      .unique();
-
-    if (!wallet) throw new Error("Wallet not found");
-
+  handler: async (ctx, { amount, ttlSeconds = 300 }): Promise<{ qrId: any; token: string; expiresAt: number }> => {
     // Create a friendly code (could be UUID or base64)
     // For simplicity: random hex string
-    const token = randomBytes(8).toString("hex");
+    const token: string = randomBytes(8).toString("hex");
+    const expiresAt: number = Date.now() + ttlSeconds * 1000;
 
-    const expiresAt = Date.now() + ttlSeconds * 1000;
-
-    const qrId = await ctx.db.insert("qr_codes", {
-      userId: uid,
-      walletId: wallet._id,
+    // Call mutation to insert into DB
+    const result: { qrId: any; token: string; expiresAt: number } = await ctx.runMutation(internal.qr_codes.generateInternal.createQR, {
       amount,
       expiresAt,
       token,
-      createdAt: Date.now(),
     });
 
-    await audit(ctx, uid, "qr_generated", { qrId, amount });
-
-    return { qrId, token, expiresAt };
+    return result;
   },
 });

@@ -25,7 +25,6 @@ const Screen: React.FC<ScreenProps> = (
 ) => {
     const { colors } = useTheme();
     const Container = safeArea ? SafeAreaView : View;
-    const Wrapper = scrollable ? ScrollView : View;
     return (
         <Container style={[{ flex: 1 }, style]}
             {...(safeArea ? { edges: ["top"] } : {})}>
@@ -37,28 +36,32 @@ const Screen: React.FC<ScreenProps> = (
                         end={{ x: 1, y: 1 }}
                         style={{ flex: 1 }}
                     >
-                        <Wrapper
-                            contentContainerStyle={[
-                                { flexGrow: 1 },
-                                contentContainerStyle,
-                            ]}
+                        {scrollable ? (
+                            <ScrollView
+                                contentContainerStyle={[{ flexGrow: 1 }, contentContainerStyle]}
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {children}
+                            </ScrollView>
+                        ) : (
+                            <View style={{ flex: 1 }}>{children}</View>
+                        )}
+                    </LinearGradient>
+                ) : (
+                    scrollable ? (
+                        <ScrollView
+                            style={{ flex: 1, backgroundColor: colors.bg }}
+                            contentContainerStyle={[{ flexGrow: 1 }, contentContainerStyle]}
                             showsVerticalScrollIndicator={false}
                         >
                             {children}
-                        </Wrapper>
-                    </LinearGradient>
-                ) : (
-                    <Wrapper
-                        contentContainerStyle={[
-                            { flexGrow: 1, backgroundColor: colors.bg },
-                            contentContainerStyle,
-                        ]}
-                        showsVerticalScrollIndicator={false}
-                    >
-                        {children}
-                    </Wrapper>
+                        </ScrollView>
+                    ) : (
+                        <View style={[{ flex: 1, backgroundColor: colors.bg }, contentContainerStyle]}>
+                            {children}
+                        </View>
+                    )
                 )
-
             }
         </Container>
     )

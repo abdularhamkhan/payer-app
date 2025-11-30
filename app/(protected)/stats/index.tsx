@@ -78,8 +78,8 @@ export default function StatsScreen() {
 	}
 
 	return (
-		<Screen gradient>
-			<View style={[styles.container, { backgroundColor: colors.bg }]}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				<Text style={[styles.title, { color: colors.text }]}>Transaction History</Text>
 
 				{/* Stats Cards */}
@@ -125,13 +125,9 @@ export default function StatsScreen() {
 				</View>
 
 				{/* Transactions List */}
-				<FlatList
-					data={filteredTransactions}
-					keyExtractor={(t) => t._id}
-					contentContainerStyle={{ paddingBottom: 100 }}
-					showsVerticalScrollIndicator={false}
-					renderItem={({ item }) => (
-						<InfoCard onPress={() => router.push(`/(protected)/transactions/detail?id=${item._id}`)} style={styles.txRow}>
+				{filteredTransactions.length > 0 ? (
+					filteredTransactions.map((item) => (
+						<InfoCard key={item._id} onPress={() => router.push(`/(protected)/transactions/detail?id=${item._id}`)} style={styles.txRow}>
 							<View style={styles.txContent}>
 								<View style={styles.txLeft}>
 									<View
@@ -152,14 +148,14 @@ export default function StatsScreen() {
 								</Text>
 							</View>
 						</InfoCard>
-					)}
-					ListEmptyComponent={
-						<View style={styles.emptyState}>
-							<Ionicons name="receipt-outline" size={64} color={colors.textMuted} />
-							<Text style={[styles.emptyText, { color: colors.textMuted }]}>No transactions yet</Text>
-						</View>
-					}
-				/>
+					))
+				) : (
+					<View style={styles.emptyState}>
+						<Ionicons name="receipt-outline" size={64} color={colors.textMuted} />
+						<Text style={[styles.emptyText, { color: colors.textMuted }]}>No transactions yet</Text>
+					</View>
+				)}
+				<View style={{ height: 40 }} />
 			</View>
 		</Screen>
 	);
@@ -167,7 +163,6 @@ export default function StatsScreen() {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 16,
 	},
 	loadingContainer: {

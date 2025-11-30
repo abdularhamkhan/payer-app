@@ -29,16 +29,35 @@ export const topup = mutation({
                         updatedAt: Date.now(),
                 });
 
-                await ctx.db.insert("transactions", {
-                        userId,
-                        walletId: wallet._id,
-                        type: "CREDIT",
-                        method: source,
-                        amount,
-                        status: "SUCCESS",
-                        createdAt: Date.now(),
-                });
+		const now = Date.now();
 
-                return { balance: newBalance };
+		await ctx.db.insert("transactions", {
+			userId,
+			walletId: wallet._id,
+			type: "CREDIT",
+			method: source,
+			amount,
+			status: "SUCCESS",
+			createdAt: now,
+		});
+
+		// Create notification
+		await ctx.db.insert("notifications", {
+			userId,
+			title: "Wallet Topped Up",
+			message: `Your wallet has been topped up with Rs. ${amount.toLocaleString()}`,
+			read: false,
+			createdAt: now,
+		});
+
+		// Create audit log
+		await ctx.db.insert("audit_logs", {
+			userId,
+			action: "WALLET_TOPUP",
+			payload: { amount, source },
+			createdAt: now,
+		});
+
+		return { balance: newBalance };
         },
 });

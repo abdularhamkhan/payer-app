@@ -3,11 +3,15 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Screen from "@/components/ui/Screen";
 import useTheme from "@/hooks/useTheme";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useSignUp } from "@clerk/clerk-expo";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SignupScreen() {
 	const router = useRouter();
@@ -20,14 +24,29 @@ export default function SignupScreen() {
 	// If user is already signed in and has a Convex record, redirect to home
 	useEffect(() => {
 		if (isSignedIn && existingUser) {
-			router.replace("/(protected)/home");
+			router.replace("/home");
 		}
 	}, [isSignedIn, existingUser]);
+
+	const handleGoogleSignup = async () => {
+		if (!isLoaded || !signUp) return;
+		try {
+			await signUp.authenticateWithRedirect({
+				strategy: "oauth_google",
+				fallbackRedirectUrl: "/(protected)/home",
+			});
+		} catch (err: any) {
+			console.error("Google signup error:", err);
+			Alert.alert("Sign Up Failed", err?.errors?.[0]?.message || "Could not sign up with Google");
+		}
+	};
 
 	const [email, setEmail] = useState("");
 	const [phone, setPhone] = useState("");
 	const [password, setPassword] = useState("");
 	const [code, setCode] = useState("");
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
 	const [stage, setStage] = useState<"signup" | "verify">("signup");
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState({ email: "", phone: "", password: "" });
@@ -50,15 +69,14 @@ export default function SignupScreen() {
 		setLoading(true);
 		setCode(""); // Reset code
 		try {
-			console.log("Creating signup with email:", email, "and phone:", phone);
+			console.log("Creating signup with email:", email);
 			
-			// Create signup with email, phone, and store phone in metadata
+			// Create signup with email only, store phone in metadata for our app
 			await signUp.create({
 				emailAddress: email,
-				phoneNumber: phone, // Add phone to clerk
 				password,
 				unsafeMetadata: {
-					phone: phone, // Also store in metadata for our app
+					phone: phone, // Store phone for our app (not Clerk verification)
 				}
 			});
 
@@ -88,75 +106,46 @@ export default function SignupScreen() {
 		setLoading(true);
 		try {
 			const result = await signUp.attemptEmailAddressVerification({ code });
-			
-			console.log("Verification result:", result.status);
+			console.log("Verification result:", result.status, "Session:", result.createdSessionId);
 
-			// After email verification, update with missing fields if needed
-			if (result.status === "missing_requirements") {
-				console.log("Missing requirements:", result.missingFields);
+			// Session should be created immediately
+			if (result.createdSessionId) {
+				console.log("Session created! Signing in...");
+				await setActive({ session: result.createdSessionId });
 				
-				// Phone is marked as required but we already provided it
-				// Try to complete the signup
-				try {
-					const updatedResult = await signUp.update({
-						unsafeMetadata: {
-							phone: phone,
-						}
-					});
-					console.log("Updated signup:", updatedResult.status);
-				} catch (updateErr) {
-					console.log("Update error:", updateErr);
+				// Wait for auth state
+				await new Promise(resolve => setTimeout(resolve, 1000));
+				
+				// Create Convex user
+				const clerkUserId = userId || signUp.createdUserId;
+				if (clerkUserId) {
+					try {
+						console.log("Creating Convex user...");
+						await createUser({ 
+							clerkUserId, 
+							phone, 
+							fullName: "New User", 
+							email,
+							firstName,
+							lastName
+						});
+						console.log("Convex user created!");
+					} catch (convexErr) {
+						console.log("Convex error (user may exist):", convexErr);
+					}
 				}
-			}
-
-			// Check if we have a session now
-			if (!result.createdSessionId && signUp.status !== "complete") {
-				console.error("No session created. Status:", result.status);
-				Alert.alert("Verification Incomplete", "Email verified. Please sign in to continue.", [
-					{ text: "Go to Login", onPress: () => router.replace("/onboarding/login") }
-				]);
-				setLoading(false);
+				
+				router.replace("/home");
 				return;
 			}
-
-			// Set the active session
-			await setActive({ session: result.createdSessionId });
-
-			// Wait for auth state to update
-			await new Promise(resolve => setTimeout(resolve, 1500));
-
-			// Get userId - try multiple sources
-			let clerkUserId = userId || signUp.createdUserId || result.createdUserId;
 			
-			console.log("Clerk User ID:", clerkUserId);
-			
-			if (!clerkUserId) {
-				console.error("No Clerk user ID found. Result:", JSON.stringify(result, null, 2));
-				Alert.alert(
-					"Account Created",
-					"Your account was created successfully. Please sign in to continue.",
-					[{ text: "Go to Login", onPress: () => router.replace("/onboarding/login") }]
-				);
-				setLoading(false);
-				return;
-			}
-
-			// Try to create user in Convex
-			try {
-				console.log("Creating user in Convex with ID:", clerkUserId);
-				await createUser({
-					clerkUserId,
-					phone,
-					fullName: "New User",
-					email,
-				});
-				console.log("User created in Convex successfully");
-			} catch (convexErr: any) {
-				// If user already exists in Convex, that's okay - just log in
-				console.log("Convex user creation error (might already exist):", convexErr);
-			}
-
-			router.replace("/(protected)/home");
+			// If no session, account created but needs login
+			console.log("No session created, redirect to login");
+			Alert.alert(
+				"Success!",
+				"Your account has been created. Please sign in to continue.",
+				[{ text: "Sign In", onPress: () => router.replace("/onboarding/login") }]
+			);
 		} catch (err: any) {
 			console.error("Verification error:", err);
 			
@@ -235,10 +224,18 @@ export default function SignupScreen() {
 							/>
 
 							<View style={styles.footer}>
-								<Text style={[styles.footerText, { color: colors.textMuted }]}>or</Text>
+								<Text style={[styles.footerText, { color: colors.textMuted }]}>or continue with</Text>
 							</View>
 
-							<TouchableOpacity onPress={() => router.push("/onboarding/login")}>
+							<TouchableOpacity 
+								onPress={handleGoogleSignup}
+								style={[styles.googleButton, { backgroundColor: colors.surface }]}
+							>
+								<Ionicons name="logo-google" size={24} color="#DB4437" />
+								<Text style={[styles.googleText, { color: colors.text }]}>Sign up with Google</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity onPress={() => router.push("/onboarding/login")} style={{ marginTop: 16 }}>
 								<Text style={[styles.loginText, { color: colors.primary }]}>
 									Already have an account? Login
 								</Text>
@@ -335,5 +332,18 @@ const styles = StyleSheet.create({
 	},
 	backText: {
 		fontSize: 15,
+	},
+	googleButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 14,
+		paddingHorizontal: 24,
+		borderRadius: 12,
+		gap: 12,
+	},
+	googleText: {
+		fontSize: 16,
+		fontWeight: "600",
 	},
 });

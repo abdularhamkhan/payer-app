@@ -11,7 +11,8 @@ import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
 	const { colors, isDarkMode, toggleDarkMode } = useTheme();
@@ -22,11 +23,14 @@ export default function ProfileScreen() {
 	// Get user data from Convex
 	const convexUser = useQuery(api.users.me.me);
 	const updateUser = useMutation(api.users.update.update);
+	const generateUploadUrl = useMutation(api.users.uploadAvatar.generateUploadUrl);
+	const saveAvatar = useMutation(api.users.uploadAvatar.saveAvatar);
 	
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
 	// Initialize form with Convex data
 	useEffect(() => {
@@ -36,6 +40,7 @@ export default function ProfileScreen() {
 			setFirstName(first || "");
 			setLastName(rest.join(" ") || "");
 			setEmail(convexUser.email || "");
+			setAvatarUri(convexUser.avatar || null);
 		}
 	}, [convexUser]);
 
@@ -54,6 +59,61 @@ export default function ProfileScreen() {
 			Alert.alert("Error", err.message || "Failed to update profile");
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handlePickImage = async () => {
+		const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (!permissionResult.granted) {
+			Alert.alert("Permission Required", "Please allow access to your photo library");
+			return;
+		}
+
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
+
+		if (!result.canceled && result.assets[0]) {
+			const imageUri = result.assets[0].uri;
+			setAvatarUri(imageUri);
+			
+			try {
+				setLoading(true);
+				
+				// Get upload URL from Convex
+				const uploadUrl = await generateUploadUrl();
+				
+				// Fetch the image as blob
+				const response = await fetch(imageUri);
+				const blob = await response.blob();
+				
+				// Upload to Convex storage
+				const uploadResponse = await fetch(uploadUrl, {
+					method: "POST",
+					headers: { "Content-Type": blob.type },
+					body: blob,
+				});
+				
+				if (!uploadResponse.ok) {
+					throw new Error("Failed to upload image");
+				}
+				
+				const { storageId } = await uploadResponse.json();
+				
+				// Save the storage ID to user profile
+				const { avatarUrl } = await saveAvatar({ storageId });
+				
+				setAvatarUri(avatarUrl);
+				Alert.alert("Success", "Profile photo updated!");
+			} catch (err: any) {
+				console.error("Upload error:", err);
+				Alert.alert("Error", err.message || "Failed to upload photo");
+			} finally {
+				setLoading(false);
+			}
 		}
 	};
 
@@ -86,13 +146,22 @@ export default function ProfileScreen() {
 	}
 
 	return (
-		<Screen gradient>
-			<ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				{/* Profile Header */}
 				<View style={styles.header}>
-					<LinearGradient colors={colors.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
-						<Text style={styles.avatarText}>{firstName.charAt(0) || "U"}</Text>
-					</LinearGradient>
+					<TouchableOpacity onPress={handlePickImage} activeOpacity={0.8}>
+						<LinearGradient colors={colors.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+							{avatarUri ? (
+								<Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+							) : (
+								<Text style={styles.avatarText}>{firstName.charAt(0) || "U"}</Text>
+							)}
+							<View style={styles.cameraIcon}>
+								<Ionicons name="camera" size={16} color="#FFFFFF" />
+							</View>
+						</LinearGradient>
+					</TouchableOpacity>
 					<Text style={[styles.userName, { color: colors.text }]}>{convexUser.fullName}</Text>
 					<Text style={[styles.userPhone, { color: colors.textMuted }]}>{convexUser.phone}</Text>
 				</View>
@@ -133,47 +202,53 @@ export default function ProfileScreen() {
 
 				{/* Quick Actions */}
 				<InfoCard style={styles.actionsCard}>
-					<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/(protected)/wallets")}>
-						<View style={styles.settingLeft}>
-							<Ionicons name="card-outline" size={24} color={colors.text} />
-							<Text style={[styles.settingLabel, { color: colors.text }]}>My Cards</Text>
-						</View>
-						<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-					</TouchableOpacity>
+				<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/wallets")}>
+					<View style={styles.settingLeft}>
+						<Ionicons name="wallet-outline" size={24} color={colors.text} />
+						<Text style={[styles.settingLabel, { color: colors.text }]}>My Wallet</Text>
+					</View>
+					<Ionicons name="chevron-forward-outline" size={20} color={colors.textMuted} />
+				</TouchableOpacity>
 
-					<View style={[styles.divider, { backgroundColor: colors.border }]} />
+				<View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-					<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/(protected)/stats")}>
-						<View style={styles.settingLeft}>
-							<Ionicons name="bar-chart-outline" size={24} color={colors.text} />
-							<Text style={[styles.settingLabel, { color: colors.text }]}>Transaction History</Text>
-						</View>
-						<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-					</TouchableOpacity>
+				<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/stats")}>
+					<View style={styles.settingLeft}>
+						<Ionicons name="stats-chart-outline" size={24} color={colors.text} />
+						<Text style={[styles.settingLabel, { color: colors.text }]}>Transaction History</Text>
+					</View>
+					<Ionicons name="chevron-forward-outline" size={20} color={colors.textMuted} />
+				</TouchableOpacity>
 
-					<View style={[styles.divider, { backgroundColor: colors.border }]} />
+				<View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-					<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/(protected)/qr")}>
-						<View style={styles.settingLeft}>
-							<Ionicons name="qr-code-outline" size={24} color={colors.text} />
-							<Text style={[styles.settingLabel, { color: colors.text }]}>QR Code</Text>
-						</View>
-						<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-					</TouchableOpacity>
+				<TouchableOpacity style={styles.actionRow} onPress={() => router.push("/qr")}>
+					<View style={styles.settingLeft}>
+						<Ionicons name="qr-code-outline" size={24} color={colors.text} />
+						<Text style={[styles.settingLabel, { color: colors.text }]}>QR Code</Text>
+					</View>
+					<Ionicons name="chevron-forward-outline" size={20} color={colors.textMuted} />
+				</TouchableOpacity>
 				</InfoCard>
 
 				{/* Sign Out Button */}
-				<Button title="Sign Out" onPress={handleSignOut} variant="danger" fullWidth style={styles.signoutButton} />
+				<TouchableOpacity 
+					onPress={handleSignOut} 
+					style={[styles.logoutButton, { backgroundColor: "#FF3B30" }]}
+					activeOpacity={0.8}
+				>
+					<Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+					<Text style={styles.logoutText}>Sign Out</Text>
+				</TouchableOpacity>
 
 				<View style={{ height: 40 }} />
-			</ScrollView>
+			</View>
 		</Screen>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 16,
 	},
 	loadingContainer: {
@@ -193,11 +268,30 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 16,
+		position: "relative",
+	},
+	avatarImage: {
+		width: 100,
+		height: 100,
+		borderRadius: 50,
 	},
 	avatarText: {
 		fontSize: 40,
 		fontWeight: "700",
 		color: "#FFFFFF",
+	},
+	cameraIcon: {
+		position: "absolute",
+		bottom: 0,
+		right: 0,
+		backgroundColor: "#007AFF",
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		justifyContent: "center",
+		alignItems: "center",
+		borderWidth: 2,
+		borderColor: "#FFFFFF",
 	},
 	userName: {
 		fontSize: 24,
@@ -251,6 +345,26 @@ const styles = StyleSheet.create({
 	},
 	signoutButton: {
 		marginTop: 8,
+	},
+	logoutButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 24,
+		borderRadius: 12,
+		marginTop: 16,
+		gap: 12,
+		shadowColor: "#FF3B30",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 6,
+	},
+	logoutText: {
+		color: "#FFFFFF",
+		fontSize: 18,
+		fontWeight: "700",
 	},
 });
 

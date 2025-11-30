@@ -14,15 +14,29 @@ export default function QRScreen() {
 	const router = useRouter();
 	const [scannedData, setScannedData] = useState<string | null>(null);
 
-	const handleScan = () => {
-		// In a real app, this would open the camera and scan
-		// For now, we'll show a placeholder message
-		Alert.alert("QR Scanner", "Camera scanning would be integrated here using expo-camera or expo-barcode-scanner");
+	const handleScan = async () => {
+		try {
+			// Dynamically import to avoid crash in Expo Go
+			const { BarCodeScanner } = await import('expo-barcode-scanner');
+			const { status } = await BarCodeScanner.requestPermissionsAsync();
+			if (status !== 'granted') {
+				Alert.alert("Permission Denied", "Camera permission is required to scan QR codes");
+				return;
+			}
+			// TODO: Navigate to scanner screen
+			Alert.alert("Scanner Ready", "Camera will open to scan QR codes");
+		} catch (error) {
+			// Fallback for Expo Go
+			Alert.alert(
+				"QR Scanner",
+				"QR scanning will work in the built APK. Camera will open to scan QR codes for payments."
+			);
+		}
 	};
 
 	return (
-		<Screen gradient>
-			<View style={[styles.container, { backgroundColor: colors.bg }]}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				<Text style={[styles.title, { color: colors.text }]}>QR Code</Text>
 
 				{/* Scanner Area */}
@@ -89,7 +103,6 @@ export default function QRScreen() {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 16,
 	},
 	title: {

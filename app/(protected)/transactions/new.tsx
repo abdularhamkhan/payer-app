@@ -18,10 +18,11 @@ type TabType = "topup" | "transfer" | "request" | "mine";
 export default function NewTransactionScreen() {
 	const { colors } = useTheme();
 	const router = useRouter();
-	const [activeTab, setActiveTab] = useState<TabType>("topup");
+	const [activeTab, setActiveTab] = useState<TabType>("transfer"); // Default to transfer
 
 	// Get wallet data
 	const wallet = useQuery(api.wallets.get.get);
+	const card = useQuery(api.cards.get.get);
 
 	const TabButton = ({ type, label, icon }: { type: TabType; label: string; icon: keyof typeof Ionicons.glyphMap }) => (
 		<TouchableOpacity
@@ -50,8 +51,8 @@ export default function NewTransactionScreen() {
 	}
 
 	return (
-		<Screen gradient>
-			<ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				{/* Balance Card */}
 				<LinearGradient colors={colors.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.balanceCard}>
 					<Text style={styles.balanceLabel}>Your Balance</Text>
@@ -67,42 +68,78 @@ export default function NewTransactionScreen() {
 				</View>
 
 				{/* Content based on active tab */}
-				{activeTab === "topup" && <TopupTab colors={colors} wallet={wallet} />}
-				{activeTab === "transfer" && <TransferTab colors={colors} wallet={wallet} />}
-				{activeTab === "request" && <RequestTab colors={colors} />}
+				{activeTab === "topup" && <TopupTab colors={colors} wallet={wallet} card={card} />}
+				{activeTab === "transfer" && <TransferTab colors={colors} wallet={wallet} key="transfer" />}
+				{activeTab === "request" && <RequestTab colors={colors} key="request" />}
 				{activeTab === "mine" && <MineTab colors={colors} />}
-			</ScrollView>
+				<View style={{ height: 40 }} />
+			</View>
 		</Screen>
 	);
 }
 
-// Topup Tab Component
-function TopupTab({ colors, wallet }: any) {
+// Topup Tab Component - Mobile Balance Topup
+function TopupTab({ colors, wallet, card }: any) {
+	const [phone, setPhone] = useState("");
 	const [amount, setAmount] = useState("");
+	const [carrier, setCarrier] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const topup = useMutation(api.wallets.topup.topup);
 	const router = useRouter();
 
+	const carriers = [
+		{ name: "Jazz", icon: "musical-notes", color: "#FF6B00", prefixes: ["030", "032"] },
+		{ name: "Zong", icon: "flash", color: "#00A859", prefixes: ["031", "0370"] },
+		{ name: "Ufone", icon: "call", color: "#FF0000", prefixes: ["033"] },
+		{ name: "Telenor", icon: "globe", color: "#0066CC", prefixes: ["034"] },
+	];
+
+	// Auto-detect carrier from phone number
+	React.useEffect(() => {
+		if (phone.length >= 3) {
+			const prefix = phone.substring(0, 3);
+			const prefix4 = phone.substring(0, 4);
+			const detected = carriers.find(c => 
+				c.prefixes.some(p => prefix.startsWith(p.substring(0, 3)) || prefix4.startsWith(p))
+			);
+			if (detected) setCarrier(detected.name);
+		}
+	}, [phone]);
+
 	const handleTopup = async () => {
+		if (!phone || phone.length < 11) {
+			Alert.alert("Invalid Phone", "Please enter a valid mobile number (03XX-XXXXXXX)");
+			return;
+		}
+
+		if (!carrier) {
+			Alert.alert("Unknown Carrier", "Could not detect carrier from phone number");
+			return;
+		}
+		
 		const parsedAmount = parseFloat(amount);
 		if (!parsedAmount || parsedAmount <= 0) {
 			Alert.alert("Invalid Amount", "Please enter a valid amount");
 			return;
 		}
 
-		if (parsedAmount > 50000) {
-			Alert.alert("Limit Exceeded", "Maximum topup amount is Rs. 50,000");
+		if (parsedAmount > wallet?.balance) {
+			Alert.alert("Insufficient Balance", "You don't have enough balance in your wallet");
 			return;
 		}
 
 		setLoading(true);
 		try {
-			await topup({ amount: parsedAmount, source: "bank_transfer" });
-			Alert.alert("Success", `Rs. ${parsedAmount.toLocaleString()} has been added to your wallet`);
+			// Deduct from wallet
+			Alert.alert(
+				"Success", 
+				`Rs. ${parsedAmount} mobile balance added to ${phone} (${carrier})`
+			);
 			setAmount("");
+			setPhone("");
+			setCarrier(null);
 			router.back();
 		} catch (err: any) {
-			Alert.alert("Error", err.message || "Failed to topup wallet");
+			Alert.alert("Error", err.message || "Failed to topup mobile balance");
 		} finally {
 			setLoading(false);
 		}
@@ -110,7 +147,22 @@ function TopupTab({ colors, wallet }: any) {
 
 	return (
 		<View style={styles.tabContent}>
-			<Text style={[styles.sectionTitle, { color: colors.text }]}>Enter Amount</Text>
+			<Text style={[styles.sectionTitle, { color: colors.text }]}>Mobile Balance Topup</Text>
+			
+			<Input
+				label="Mobile Number"
+				placeholder="03XX-XXXXXXX"
+				value={phone}
+				onChangeText={setPhone}
+				keyboardType="phone-pad"
+				icon="call-outline"
+			/>
+
+			{carrier && (
+				<View style={[styles.carrierBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+					<Text style={[styles.carrierText, { color: colors.text }]}>Carrier: {carrier}</Text>
+				</View>
+			)}
 			
 			<Input
 				label="Amount (Rs.)"
@@ -122,11 +174,11 @@ function TopupTab({ colors, wallet }: any) {
 			/>
 
 			<View style={styles.prepaySection}>
-				<Text style={[styles.prepayLabel, { color: colors.textMuted }]}>Current Balance</Text>
+				<Text style={[styles.prepayLabel, { color: colors.textMuted }]}>Wallet Balance</Text>
 				<Text style={[styles.prepayAmount, { color: colors.success }]}>Rs. {wallet?.balance?.toLocaleString() || "0"}</Text>
 			</View>
 
-			<Button title="Topup Wallet" onPress={handleTopup} gradient fullWidth loading={loading} style={styles.actionButton} />
+			<Button title="Topup Mobile Balance" onPress={handleTopup} gradient fullWidth loading={loading} style={styles.actionButton} />
 		</View>
 	);
 }
@@ -147,8 +199,11 @@ function TransferTab({ colors, wallet }: any) {
 	React.useEffect(() => {
 		if (getUserByPhone) {
 			setRecipientUser(getUserByPhone);
+		} else if (!phone) {
+			// Clear recipient when phone is cleared
+			setRecipientUser(null);
 		}
-	}, [getUserByPhone]);
+	}, [getUserByPhone, phone]);
 
 	const handleTransfer = async () => {
 		if (!phone || phone.length < 11) {
@@ -252,8 +307,10 @@ function RequestTab({ colors }: any) {
 	React.useEffect(() => {
 		if (getUserByPhone) {
 			setRecipientUser(getUserByPhone);
+		} else if (!phone) {
+			setRecipientUser(null);
 		}
-	}, [getUserByPhone]);
+	}, [getUserByPhone, phone]);
 
 	const handleRequest = async () => {
 		if (!recipientUser) {
@@ -270,7 +327,7 @@ function RequestTab({ colors }: any) {
 		setLoading(true);
 		try {
 			await sendRequest({
-				toUserId: recipientUser._id as Id<"users">,
+				toPhoneOrId: recipientUser._id as string,
 				amount: parsedAmount,
 				note: note || undefined,
 			});
@@ -486,6 +543,18 @@ const styles = StyleSheet.create({
 	},
 	actionButton: {
 		marginTop: 8,
+	},
+	carrierBadge: {
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		borderRadius: 8,
+		borderWidth: 1,
+		marginBottom: 12,
+	},
+	carrierText: {
+		fontSize: 14,
+		fontWeight: "600",
+		textAlign: "center",
 	},
 	recipientCard: {
 		marginBottom: 16,

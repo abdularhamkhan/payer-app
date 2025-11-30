@@ -27,8 +27,8 @@ export default function WalletsScreen() {
 	}
 
 	return (
-		<Screen gradient>
-			<View style={[styles.container, { backgroundColor: colors.bg }]}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				<Text style={[styles.title, { color: colors.text }]}>My Cards</Text>
 
 				{card ? (
@@ -110,7 +110,6 @@ export default function WalletsScreen() {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 16,
 	},
 	loadingContainer: {

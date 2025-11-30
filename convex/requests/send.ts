@@ -6,10 +6,11 @@ import { getConvexUser } from "../utils/getUser";
 
 /**
  * Small heuristic to detect Convex Id strings.
- * Convex ids typically contain '::' (e.g. "users::xxxxxx").
+ * Convex ids are alphanumeric strings without special chars
  */
 function isConvexId(value: string): boolean {
-        return value.includes("::");
+        // Check if it's a long alphanumeric string (Convex ID format)
+        return /^[a-z0-9]{20,}$/i.test(value);
 }
 
 export const send = mutation({
@@ -24,35 +25,32 @@ export const send = mutation({
                 const fromUser = await getConvexUser(ctx);
                 const fromId = fromUser._id;
 
-                // Resolve recipient: try normalized phone first (most common),
-                // then fallback to direct id lookup (if it looks like a convex id).
-                let toUser = null;
+		// Resolve recipient: try ID first (if it looks like convex ID), then phone
+		let toUser = null;
+		
+		if (isConvexId(toPhoneOrId)) {
+			// Try as direct ID first
+			try {
+				const userById = await ctx.db.get(toPhoneOrId as any);
+				if (userById && 'clerkUserId' in userById) {
+					toUser = userById as any;
+				}
+			} catch (err) {
+				// ID lookup failed
+				toUser = null;
+			}
+		}
+		
+		// Fallback to phone lookup if ID didn't work
+		if (!toUser) {
+			const byPhoneLookup = await ctx.db
+				.query("users")
+				.withIndex("by_normalizedPhone", (q) => q.eq("normalizedPhone", toPhoneOrId))
+				.first();
+			toUser = byPhoneLookup;
+		}
 
-                // If input looks like a normalized phone (starts with digits) or random string,
-                // prefer index lookup; otherwise if it's a convex id try db.get.
-                // We'll attempt index lookup first for safety/performance.
-                const byPhoneLookup = await ctx.db
-                        .query("users")
-                        .withIndex("by_normalizedPhone", (q) => q.eq("normalizedPhone", toPhoneOrId))
-                        .unique();
-
-                if (byPhoneLookup) {
-                        toUser = byPhoneLookup;
-                } else if (isConvexId(toPhoneOrId)) {
-                        // safe to use db.get — Convex requires an Id type; cast to any to satisfy TS here.
-                        // This is a runtime operation so it will fail if id is invalid.
-                        try {
-                                toUser = await ctx.db.get(toPhoneOrId as any);
-                        } catch (err) {
-                                // If db.get throws, we treat as not found and report below.
-                                toUser = null;
-                        }
-                } else {
-                        // not a convex id and phone lookup returned nothing -> not found
-                        toUser = null;
-                }
-
-                if (!toUser) throw new Error("Recipient not found");
+		if (!toUser) throw new Error("Recipient not found");
 
                 // Prevent requests to self
                 // Compare via string coercion to avoid opaque-id issues

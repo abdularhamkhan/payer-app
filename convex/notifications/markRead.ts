@@ -6,9 +6,9 @@ import { getConvexUser } from "../utils/getUser";
 export const markRead = mutation({
         args: {
                 notificationId: v.id("notifications"),
-                read: v.boolean(),
         },
-        handler: async (ctx, { notificationId, read }) => {
+        handler: async (ctx, { notificationId }) => {
+                const read = true;
                 const user = await getConvexUser(ctx);
                 const n = await ctx.db.get(notificationId);
                 if (!n) throw new Error("Notification not found");

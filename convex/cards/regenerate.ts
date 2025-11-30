@@ -1,6 +1,15 @@
-import bcrypt from "bcryptjs";
 import { mutation } from "../_generated/server";
 import { getConvexUser } from "../utils/getUser";
+
+function simpleHash(input: string): string {
+	let hash = 0;
+	for (let i = 0; i < input.length; i++) {
+		const char = input.charCodeAt(i);
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash;
+	}
+	return Math.abs(hash).toString(36);
+}
 
 export const regenerate = mutation({
         args: {},
@@ -21,7 +30,7 @@ export const regenerate = mutation({
                 const newExpiry = "01/30";
 
                 const newCvc = "456";
-                const newCvcHash = await bcrypt.hash(newCvc, 10);
+                const newCvcHash = simpleHash(newCvc);
 
                 await ctx.db.patch(card._id, {
                         provider: "MASTER CARD",

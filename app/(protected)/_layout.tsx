@@ -86,6 +86,16 @@ const TabsLayout = () => {
                     tabBarActiveTintColor: colors.primary,
                 }}
             />
+            
+            {/* Hide nested screens from tabs */}
+            <Tabs.Screen name="wallets/cardDetail" options={{ href: null }} />
+            <Tabs.Screen name="wallets/applyCard" options={{ href: null }} />
+            <Tabs.Screen name="qr/generate" options={{ href: null }} />
+            <Tabs.Screen name="qr/history" options={{ href: null }} />
+            <Tabs.Screen name="transactions/index" options={{ href: null }} />
+            <Tabs.Screen name="transactions/new" options={{ href: null }} />
+            <Tabs.Screen name="transactions/detail" options={{ href: null }} />
+            <Tabs.Screen name="notifications/index" options={{ href: null }} />
         </Tabs>
     );
 };

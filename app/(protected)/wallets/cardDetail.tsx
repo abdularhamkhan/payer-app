@@ -18,6 +18,7 @@ export default function CardDetailScreen() {
 	const card = useQuery(api.cards.get.get);
 	const freezeCard = useMutation(api.cards.freeze.freeze);
 	const unfreezeCard = useMutation(api.cards.unfreeze.unfreeze);
+	const deleteCard = useMutation(api.cards.delete.deleteCard);
 	const [loading, setLoading] = useState(false);
 	const [showFullNumber, setShowFullNumber] = useState(false);
 
@@ -71,8 +72,8 @@ export default function CardDetailScreen() {
 	}
 
 	return (
-		<Screen gradient>
-			<View style={[styles.container, { backgroundColor: colors.bg }]}>
+		<Screen gradient scrollable>
+			<View style={styles.container}>
 				<Text style={[styles.title, { color: colors.text }]}>Card Details</Text>
 
 				{/* Card Visual */}
@@ -157,6 +158,39 @@ export default function CardDetailScreen() {
 					style={styles.freezeButton}
 				/>
 
+				<TouchableOpacity 
+					style={[styles.deleteButton, { borderColor: colors.danger }]}
+					onPress={() => {
+						Alert.alert(
+							"Delete Card",
+							"Are you sure you want to delete this card? This action cannot be undone.",
+							[
+								{ text: "Cancel", style: "cancel" },
+								{
+									text: "Delete",
+									style: "destructive",
+									onPress: async () => {
+										setLoading(true);
+										try {
+											await deleteCard();
+											Alert.alert("Deleted", "Card has been deleted successfully");
+											router.back();
+										} catch (err: any) {
+											Alert.alert("Error", err.message || "Failed to delete card");
+										} finally {
+											setLoading(false);
+										}
+									},
+								},
+							]
+						);
+					}}
+					disabled={loading}
+				>
+					<Ionicons name="trash-outline" size={20} color={colors.danger} />
+					<Text style={[styles.deleteText, { color: colors.danger }]}>Delete Card</Text>
+				</TouchableOpacity>
+
 				<TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
 					<Text style={[styles.backText, { color: colors.textMuted }]}>← Back to Cards</Text>
 				</TouchableOpacity>
@@ -167,7 +201,6 @@ export default function CardDetailScreen() {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 16,
 	},
 	loadingContainer: {
@@ -266,6 +299,20 @@ const styles = StyleSheet.create({
 	},
 	freezeButton: {
 		marginBottom: 16,
+	},
+	deleteButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 8,
+		paddingVertical: 14,
+		borderRadius: 12,
+		borderWidth: 1.5,
+		marginBottom: 16,
+	},
+	deleteText: {
+		fontSize: 16,
+		fontWeight: "600",
 	},
 	backButton: {
 		alignItems: "center",

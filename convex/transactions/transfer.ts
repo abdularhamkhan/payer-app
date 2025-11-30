@@ -64,15 +64,51 @@ export const transfer = mutation({
                         userId: toUserId,
                         walletId: receiverWallet._id,
                         amount,
-                        type: "CREDIT",
-                        description,
-                        method: "transfer",
-                        fromUserId,
-                        status: "SUCCESS",
-                        createdAt: now,
-                });
+			type: "CREDIT",
+			description,
+			method: "transfer",
+			fromUserId,
+			status: "SUCCESS",
+			createdAt: now,
+		});
 
-                return { success: true };
+		// Get recipient details for notification
+		const toUser = await ctx.db.get(toUserId);
+
+		// Create notification for sender
+		await ctx.db.insert("notifications", {
+			userId: fromUserId,
+			title: "Money Sent",
+			message: `You sent Rs. ${amount.toLocaleString()} to ${toUser?.fullName || "Unknown"}`,
+			read: false,
+			createdAt: now,
+		});
+
+		// Create notification for receiver
+		await ctx.db.insert("notifications", {
+			userId: toUserId,
+			title: "Money Received",
+			message: `You received Rs. ${amount.toLocaleString()} from ${fromUser.fullName}`,
+			read: false,
+			createdAt: now,
+		});
+
+		// Create audit logs
+		await ctx.db.insert("audit_logs", {
+			userId: fromUserId,
+			action: "TRANSFER_SENT",
+			payload: { toUserId, amount, description },
+			createdAt: now,
+		});
+
+		await ctx.db.insert("audit_logs", {
+			userId: toUserId,
+			action: "TRANSFER_RECEIVED",
+			payload: { fromUserId, amount, description },
+			createdAt: now,
+		});
+
+		return { success: true };
         },
 });
 

@@ -17,14 +17,23 @@
         "foregroundImage": "./assets/images/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.payer.wallet",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/payer.png"
     },
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/payer.png",
       "resizeMode": "contain",
       "backgroundColor": "#7F5AF0"
     },
@@ -33,20 +42,28 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
+          "image": "./assets/images/payer.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#7F5AF0",
           "dark": {
-            "image": "./assets/images/splash.png",
+            "image": "./assets/images/payer.png",
             "backgroundColor": "#0E1013"
           }
         }
-      ]
+      ],
+      "expo-barcode-scanner",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "57c2086f-6a07-418d-939e-9ee7e7a37c39"
+      }
     }
   }
 }

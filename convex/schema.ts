@@ -33,12 +33,14 @@ export default defineSchema({
          * ------------------------------------------- */
         users: defineTable({
                 clerkUserId: v.string(),          // Clerk identity
-                phone: v.string(),                // 03xx-xxxxxxx
-                normalizedPhone: v.string(),      // 923xxxxxxxxx
+                phone: v.optional(v.string()),    // 03xx-xxxxxxx (optional, not verified by Clerk)
+                normalizedPhone: v.optional(v.string()), // 923xxxxxxxxx
                 fullName: v.string(),
+                firstName: v.optional(v.string()),
+                lastName: v.optional(v.string()),
                 email: v.optional(v.string()),
                 avatar: v.optional(v.string()),   // Convex storage URL
-                isVerified: v.boolean(),
+                isVerified: v.optional(v.boolean()),
                 createdAt: v.number(),
         })
                 .index("by_clerkUserId", ["clerkUserId"])
@@ -110,8 +112,8 @@ export default defineSchema({
                 status: v.string(),               // "PENDING" | "SUCCESS" | "FAILED"
                 createdAt: v.number(),
         })
-                .index("by_wallet", ["walletId", "_creationTime"])
-                .index("by_user", ["userId", "_creationTime"]),
+                .index("by_wallet", ["walletId"])
+                .index("by_user", ["userId"]),
 
         /* ---------------------------------------------
          * TRANSACTION REQUESTS (P2P "request money")

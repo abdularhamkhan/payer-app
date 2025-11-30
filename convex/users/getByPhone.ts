@@ -4,13 +4,12 @@ import { normalizePhone } from "../utils/normalizePhone";
 
 export const getByPhone = query({
         args: { phone: v.string() },
-
-        handler: async (ctx, args) => {
-                const normalized = normalizePhone(args.phone);
-
-                return await ctx.db
+        handler: async (ctx, { phone }) => {
+                const normalized = normalizePhone(phone);
+                const user = await ctx.db
                         .query("users")
                         .withIndex("by_normalizedPhone", q => q.eq("normalizedPhone", normalized))
-                        .unique();
-        },
+                        .first(); // Use first() instead of unique() to avoid duplicate errors
+        return user;
+    },
 });
